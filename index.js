@@ -26,7 +26,7 @@ const startServer = async () => {
     app.listen(8080, () =>
       // console.log("Server started on port http://localhost:8080")
       console.log(
-        "Server started on port https://dashboard-server-817q.onrender.com"
+        "Server started on port https://dashboard-server-aq1z.onrender.com"
       )
     );
   } catch (error) {

@@ -5,6 +5,7 @@ import cors from "cors";
 import connectDB from "./mongodb/connect.js";
 import userRouter from "./routes/user.routes.js";
 import propertyRouter from "./routes/property.routes.js";
+import ticketRouter from "./routes/ticket.routes.js";
 
 dotenv.config();
 
@@ -18,16 +19,17 @@ app.get("/", (req, res) => {
 
 app.use("/api/v1/users", userRouter);
 app.use("/api/v1/properties", propertyRouter);
+app.use("/api/v1/tickets", ticketRouter);
 
 const startServer = async () => {
   try {
     connectDB(process.env.MONGODB_URL);
 
     app.listen(8080, () =>
-      // console.log("Server started on port http://localhost:8080")
-      console.log(
-        "Server started on port https://dashboard-server-aq1z.onrender.com"
-      )
+      console.log("Server started on port http://localhost:8080")
+      // console.log(
+      //   "Server started on port https://dashboard-server-aq1z.onrender.com"
+      // )
     );
   } catch (error) {
     console.log(error);

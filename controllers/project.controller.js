@@ -1,4 +1,4 @@
-import Property from "../mongodb/models/property.js";
+import Project from "../mongodb/models/project.js";
 import User from "../mongodb/models/user.js";
 
 import mongoose from "mongoose";
@@ -13,10 +13,18 @@ cloudinary.config({
   api_secret: process.env.CLOUDINARY_API_SECRET,
 });
 
-const createProperty = async (req, res) => {
+const createProject = async (req, res) => {
   try {
-    const { title, description, propertyType, location, price, photo, email } =
-      req.body;
+    const {
+      title,
+      description,
+      projectType,
+      photo,
+      tag,
+      lead,
+      members,
+      email,
+    } = req.body;
 
     const session = await mongoose.startSession();
     session.startTransaction();
@@ -27,41 +35,42 @@ const createProperty = async (req, res) => {
 
     const photoUrl = await cloudinary.uploader.upload(photo);
 
-    const newProperty = await Property.create({
+    const newProject = await Project.create({
       title,
       description,
-      propertyType,
-      location,
-      price,
+      projectType,
+      members,
+      tag,
+      projectType,
       photo: photoUrl.url,
-      creator: user._id,
+      lead: user._id,
     });
 
-    user.allProperties.push(newProperty._id);
+    user.allProjects.push(newProject._id);
     await user.save({ session });
 
     await session.commitTransaction();
 
-    res.status(200).json({ message: "Property created successfully" });
+    res.status(200).json({ message: "Project created successfully" });
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
 };
 
-const getAllProperties = async (req, res) => {
+const getAllProjects = async (req, res) => {
   const {
     _end,
     _order,
     _start,
     _sort,
     title_like = "",
-    propertyType = "",
+    projectType = "",
   } = req.query;
 
   const query = {};
 
-  if (propertyType !== "") {
-    query.propertyType = propertyType;
+  if (projectType !== "") {
+    query.projectType = projectType;
   }
 
   if (title_like) {
@@ -69,9 +78,9 @@ const getAllProperties = async (req, res) => {
   }
 
   try {
-    const count = await Property.countDocuments({ query });
+    const count = await Project.countDocuments({ query });
 
-    const properties = await Property.find(query)
+    const Projects = await Project.find(query)
       .limit(_end)
       .skip(_start)
       .sort({ [_sort]: _order });
@@ -79,81 +88,88 @@ const getAllProperties = async (req, res) => {
     res.header("x-total-count", count);
     res.header("Access-Control-Expose-Headers", "x-total-count");
 
-    res.status(200).json(properties);
+    res.status(200).json(Projects);
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
 };
 
-const getPropertyDetail = async (req, res) => {
+const getProjectDetail = async (req, res) => {
   const { id } = req.params;
-  const propertyExists = await Property.findOne({ _id: id }).populate(
-    "creator"
-  );
+  const projectExists = await Project.findOne({ _id: id }).populate("lead");
 
-  if (propertyExists) {
-    res.status(200).json(propertyExists);
+  if (projectExists) {
+    res.status(200).json(projectExists);
   } else {
-    res.status(404).json({ message: "Property not found" });
+    res.status(404).json({ message: "Project not found" });
   }
 };
 
-
-const updateProperty = async (req, res) => {
+const updateProject = async (req, res) => {
   try {
     const { id } = req.params;
-    const { title, description, propertyType, location, price, photo } =
-      req.body;
+    const {
+      title,
+      description,
+      projectType,
+      photo,
+      tag,
+      lead,
+      members,
+      email,
+    } = req.body;
 
     const photoUrl = await cloudinary.uploader.upload(photo);
 
-    await Property.findByIdAndUpdate(
+    await Project.findByIdAndUpdate(
       { _id: id },
       {
         title,
         description,
-        propertyType,
-        location,
-        price,
+        projectType,
+        members,
+        tag,
+        projectType,
+        lead,
         photo: photoUrl.url || photo,
       }
     );
 
-    res.status(200).json({ message: "Property updated successfully" });
+    res.status(200).json({ message: "Project updated successfully" });
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
 };
 
-const deleteProperty = async (req, res) => {
+const deleteProject = async (req, res) => {
   try {
     const { id } = req.params;
 
-    const propertyToDelete = await Property.findById({ _id: id }).populate(
-      "creator"
+    const projectToDelete = await Project.findById({ _id: id }).populate(
+      "lead"
     );
 
-    if (!propertyToDelete) throw new Error("Property not found");
+    if (!projectToDelete) throw new Error("Project not found");
 
     const session = await mongoose.startSession();
     session.startTransaction();
 
-    propertyToDelete.remove({ session });
-    propertyToDelete.creator.allProperties.pull(propertyToDelete);
+    projectToDelete.remove({ session });
+    projectToDelete.lead.allProjects.pull(projectToDelete);
 
-    await propertyToDelete.creator.save({ session });
+    await projectToDelete.lead.save({ session });
     await session.commitTransaction();
 
-    res.status(200).json({ message: "Property deleted successfully" });
+    res.status(200).json({ message: "Project deleted successfully" });
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
 };
 
 export {
-  getAllProperties,
-  getPropertyDetail,
-  createProperty,
-  updateProperty,
-  deleteProperty,
+  getAllProjects,
+  getProjectDetail,
+  createProject,
+  updateProject,
+  deleteProject,
 };

@@ -17,7 +17,6 @@ app.get("/", (req, res) => {
   res.send("Hello Server!");
 });
 
-
 // middleware
 app.use("/api/v1/users", userRouter);
 app.use("/api/v1/projects", projectRouter);

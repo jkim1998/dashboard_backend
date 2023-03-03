@@ -12,6 +12,7 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
+    "@pankod/refine-core": "^3.99.4",
     "cloudinary": "^1.34.0",
     "cors": "^2.8.5",
     "dotenv": "^16.0.3",

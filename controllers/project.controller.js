@@ -17,6 +17,8 @@ const createProject = async (req, res) => {
   try {
     const {
       title,
+      github,
+      preview,
       description,
       projectType,
       photo,
@@ -38,7 +40,8 @@ const createProject = async (req, res) => {
     const newProject = await Project.create({
       title,
       description,
-      projectType,
+      github,
+      preview,
       members,
       tag,
       projectType,
@@ -111,27 +114,31 @@ const updateProject = async (req, res) => {
     const {
       title,
       description,
+      github,
+      preview,
+      members,
+      tag,
       projectType,
       photo,
-      tag,
       lead,
-      members,
-      email,
     } = req.body;
 
     const photoUrl = await cloudinary.uploader.upload(photo);
-
+    console.log("id", id);
+    const user = await User.findById("63f9232a4aecb8b197fe2435");
     await Project.findByIdAndUpdate(
       { _id: id },
       {
         title,
         description,
+        github,
+        preview,
         projectType,
         members,
         tag,
         projectType,
         lead,
-        photo: photoUrl.url || photo,
+        photo: photoUrl.url,
       }
     );
 
@@ -161,6 +168,22 @@ const deleteProject = async (req, res) => {
     await session.commitTransaction();
 
     res.status(200).json({ message: "Project deleted successfully" });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+const getTicketInfoByID = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    const ticket = await Ticket.findOne({ _id: id }).populate("allTickets");
+
+    if (ticket) {
+      res.status(200).json(ticket);
+    } else {
+      res.status(404).json({ message: "Ticket not found" });
+    }
   } catch (error) {
     res.status(500).json({ message: error.message });
   }

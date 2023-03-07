@@ -90,7 +90,7 @@ const getAllProjects = async (req, res) => {
 
     res.header("x-total-count", count);
     res.header("Access-Control-Expose-Headers", "x-total-count");
-
+    console.log(count)
     res.status(200).json(Projects);
   } catch (error) {
     res.status(500).json({ message: error.message });
@@ -124,8 +124,8 @@ const updateProject = async (req, res) => {
     } = req.body;
 
     const photoUrl = await cloudinary.uploader.upload(photo);
-    console.log("id", id);
-    const user = await User.findById("63f9232a4aecb8b197fe2435");
+    // console.log("id", id);
+    // const user = await User.findById("63f9232a4aecb8b197fe2435");
     await Project.findByIdAndUpdate(
       { _id: id },
       {

@@ -36,7 +36,6 @@ const createTicket = async (req, res) => {
       creator: user._id,
       project: project._id,
     });
-    console.log("project: ", projectForTicket);
     res.status(200).json({ message: "Ticket created successfully" });
   } catch (error) {
     res.status(500).json({ message: error.message });
@@ -56,7 +55,6 @@ const getAllTickets = async (req, res) => {
 const getTicketDetail = async (req, res) => {
   const { id } = req.params;
   const propertyExists = await Ticket.findOne({ _id: id }).populate("creator");
-  
 
   if (propertyExists) {
     res.status(200).json(propertyExists);
@@ -68,20 +66,17 @@ const getTicketDetail = async (req, res) => {
 const updateTicket = async (req, res) => {
   try {
     const { id } = req.params;
-    const { title, description, propertyType, location, price, photo } =
-      req.body;
+    const { title, description, priority, project } = req.body;
 
-    const photoUrl = await cloudinary.uploader.upload(photo);
+    // const photoUrl = await cloudinary.uploader.upload(photo);
 
     await Ticket.findByIdAndUpdate(
       { _id: id },
       {
         title,
         description,
-        propertyType,
-        location,
-        price,
-        photo: photoUrl.url || photo,
+        priority,
+        // photo: photoUrl.url || photo,
       }
     );
 
@@ -102,10 +97,13 @@ const deleteTicket = async (req, res) => {
 
     const session = await mongoose.startSession();
     session.startTransaction();
+
     ticketToDelete.remove({ session });
     ticketToDelete.creator.allProjects.pull(ticketToDelete);
+
     await ticketToDelete.creator.save({ session });
     await session.commitTransaction();
+    
     res.status(200).json({ message: "Ticket deleted successfully" });
   } catch (error) {
     res.status(500).json({ message: error.message });

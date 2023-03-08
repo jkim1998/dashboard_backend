@@ -42,6 +42,7 @@ const createProject = async (req, res) => {
       description,
       github,
       preview,
+      lead,
       members,
       tag,
       projectType,
@@ -90,7 +91,6 @@ const getAllProjects = async (req, res) => {
 
     res.header("x-total-count", count);
     res.header("Access-Control-Expose-Headers", "x-total-count");
-    console.log(count)
     res.status(200).json(Projects);
   } catch (error) {
     res.status(500).json({ message: error.message });

@@ -1,4 +1,49 @@
 import User from "../mongodb/models/user.js";
+import mongoose from "mongoose";
+import * as dotenv from "dotenv";
+import { v2 as cloudinary } from "cloudinary";
+
+dotenv.config();
+
+cloudinary.config({
+  cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
+  api_key: process.env.CLOUDINARY_API_KEY,
+  api_secret: process.env.CLOUDINARY_API_SECRET,
+});
+const createUserEmailPassword = async (req, res) => {
+  try {
+    const { name, email, password, avatar, phone, location } = req.body;
+    const newEmail = req.body.email;
+
+    const session = await mongoose.startSession();
+    session.startTransaction();
+    console.log(newEmail);
+    const user = await User.findOne({ email }).session(session);
+    // Check if user with the same email already exists
+    if (user) {
+      return res
+        .status(400)
+        .json({ message: "User with the same email already exists" });
+    }
+
+    const photoUrl = await cloudinary.uploader.upload(avatar);
+    // Create new user
+    const newUser = await User.create({
+      name,
+      email: newEmail, // overwrite email with new email
+      password,
+      avatar: photoUrl.url,
+      phone,
+      location,
+    });
+
+    await user.save({ session });
+    await session.commitTransaction();
+    res.status(201).json(newUser);
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
 
 const createUser = async (req, res) => {
   try {
@@ -46,4 +91,14 @@ const getUserInfoByID = async (req, res) => {
   }
 };
 
-export { getAllUsers, createUser, getUserInfoByID };
+const updateUser = () => {};
+const deleteUser = () => {};
+
+export {
+  getAllUsers,
+  createUser,
+  createUserEmailPassword,
+  getUserInfoByID,
+  updateUser,
+  deleteUser,
+};

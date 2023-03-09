@@ -16,25 +16,27 @@ cloudinary.config({
 
 const createTicket = async (req, res) => {
   try {
-    const { title, description, priority, email, project } = req.body;
+    const { title, description, type, priority, email, project } = req.body;
 
     const session = await mongoose.startSession();
     session.startTransaction();
 
     const user = await User.findOne({ email }).session(session);
-    const projectForTicket = await Project.findOne({ project }).session(
-      session
-    );
+    // const projectForTicket = await Project.findOne({ project }).session(
+    //   session
+    // );
 
     if (!user) throw new Error("User not found");
-    if (!projectForTicket) throw new Error("Project not found");
+    // if (!projectForTicket) throw new Error("Project not found");
 
     const newTicket = await Ticket.create({
       title,
       description,
+      type,
       priority,
+      status: "open",
       creator: user._id,
-      project: project._id,
+      project,
     });
     res.status(200).json({ message: "Ticket created successfully" });
   } catch (error) {
@@ -66,16 +68,22 @@ const getTicketDetail = async (req, res) => {
 const updateTicket = async (req, res) => {
   try {
     const { id } = req.params;
-    const { title, description, priority, project } = req.body;
-
+    const { title, description, type, status, priority, project } = req.body;
     // const photoUrl = await cloudinary.uploader.upload(photo);
+    const session = await mongoose.startSession();
+    session.startTransaction();
 
+    const projectID = await Project.findOne({ project }).session(session);
+    if (!projectID) throw new Error("project not found");
     await Ticket.findByIdAndUpdate(
       { _id: id },
       {
         title,
         description,
+        type,
+        status,
         priority,
+        // project: projectID._id || project,
         // photo: photoUrl.url || photo,
       }
     );
@@ -103,7 +111,7 @@ const deleteTicket = async (req, res) => {
 
     await ticketToDelete.creator.save({ session });
     await session.commitTransaction();
-    
+
     res.status(200).json({ message: "Ticket deleted successfully" });
   } catch (error) {
     res.status(500).json({ message: error.message });

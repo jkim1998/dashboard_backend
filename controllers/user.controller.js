@@ -11,37 +11,24 @@ cloudinary.config({
   api_secret: process.env.CLOUDINARY_API_SECRET,
 });
 const createUserEmailPassword = async (req, res) => {
+  const { email, password } = req.body;
   try {
-    const { name, email, password, avatar, phone, location } = req.body;
-    const newEmail = req.body.email;
+    const user = await User.findOne({ email });
 
-    const session = await mongoose.startSession();
-    session.startTransaction();
-    console.log(newEmail);
-    const user = await User.findOne({ email }).session(session);
-    // Check if user with the same email already exists
+    console.log("2", email);
     if (user) {
-      return res
-        .status(400)
-        .json({ message: "User with the same email already exists" });
+      return res.status(401).json({ message: "Email already registered" });
     }
 
-    const photoUrl = await cloudinary.uploader.upload(avatar);
-    // Create new user
-    const newUser = await User.create({
-      name,
-      email: newEmail, // overwrite email with new email
-      password,
-      avatar: photoUrl.url,
-      phone,
-      location,
+    const newUser = await User.create({ email, password });
+    console.log("pw:", password);
+    res.status(200).json({
+      email: newUser.email,
+      password: newUser.password,
     });
-
-    await user.save({ session });
-    await session.commitTransaction();
-    res.status(201).json(newUser);
-  } catch (error) {
-    res.status(500).json({ message: error.message });
+  } catch (err) {
+    console.log(err);
+    res.status(500).json({ message: "Internal Server Error." });
   }
 };
 

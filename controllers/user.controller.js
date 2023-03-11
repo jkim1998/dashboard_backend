@@ -2,6 +2,10 @@ import User from "../mongodb/models/user.js";
 import mongoose from "mongoose";
 import * as dotenv from "dotenv";
 import { v2 as cloudinary } from "cloudinary";
+import path from "path"; // import the path module
+import { fileURLToPath } from "url";
+
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 dotenv.config();
 
@@ -11,20 +15,42 @@ cloudinary.config({
   api_secret: process.env.CLOUDINARY_API_SECRET,
 });
 const createUserEmailPassword = async (req, res) => {
-  const { email, password } = req.body;
+  const { email, password, name, avatar, location, phone, role } = req.body;
+
   try {
     const user = await User.findOne({ email });
 
-    console.log("2", email);
     if (user) {
       return res.status(401).json({ message: "Email already registered" });
     }
 
-    const newUser = await User.create({ email, password });
-    console.log("pw:", password);
+    const userData = {
+      email,
+      password: password || "",
+      name: name || "Anonymous",
+      avatar: avatar || "",
+      location: location || "",
+      phone: phone || "",
+      role: role || "user",
+    };
+
+    if (userData.avatar === "") {
+      // If avatar is not provided, use the default picture
+      const imagePath = path.join(__dirname, "anonymous.png");
+      const result = await cloudinary.uploader.upload(imagePath);
+      userData.avatar = result.secure_url;
+    }
+
+    const newUser = await User.create(userData);
+
     res.status(200).json({
       email: newUser.email,
       password: newUser.password,
+      name: newUser.name,
+      avatar: newUser.avatar,
+      location: newUser.location,
+      phone: newUser.phone,
+      role: newUser.role,
     });
   } catch (err) {
     console.log(err);

@@ -104,7 +104,33 @@ const getUserInfoByID = async (req, res) => {
   }
 };
 
-const updateUser = () => {};
+const updateUser = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { email, password, name, avatar, location, phone, role } = req.body;
+
+    let updateFields = {
+      email,
+      password,
+      name,
+      location,
+      phone,
+      role,
+    };
+
+    if (avatar) {
+      const photoUrl = await cloudinary.uploader.upload(avatar);
+      updateFields.avatar = photoUrl.url;
+    }
+
+    await User.findByIdAndUpdate({ _id: id }, updateFields);
+
+    res.status(200).json({ message: "User updated successfully" });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
 const deleteUser = () => {};
 
 export {
